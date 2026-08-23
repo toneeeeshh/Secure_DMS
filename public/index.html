@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Secure DMS &mdash; Case Document Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-seal">&#9878;</div>
+    <p class="eyebrow">Secure Digital Document Management System</p>
+    <h1 id="auth-title">Registry Sign-In</h1>
+
+    <form id="login-form">
+      <label>Username
+        <input type="text" id="login-username" autocomplete="username" required />
+      </label>
+      <label>Password
+        <input type="password" id="login-password" autocomplete="current-password" required />
+      </label>
+      <div class="form-error" id="login-error"></div>
+      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+    </form>
+
+    <form id="bootstrap-form" style="display:none">
+      <p class="hint">No administrator account exists yet. Create the first one to initialize the registry.</p>
+      <label>Full name
+        <input type="text" id="bs-name" required />
+      </label>
+      <label>Username
+        <input type="text" id="bs-username" required />
+      </label>
+      <label>Password (min 8 characters)
+        <input type="password" id="bs-password" minlength="8" required />
+      </label>
+      <div class="form-error" id="bootstrap-error"></div>
+      <button type="submit" class="btn btn-primary btn-block">Create Administrator Account</button>
+    </form>
+
+    <p class="auth-switch" id="auth-switch"></p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">&#9878;</span>
+      <div>
+        <div class="brand-title">Secure DMS</div>
+        <div class="brand-sub">Case Document Registry</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-view="cases">Cases</button>
+      <button class="nav-item" data-view="search">Search</button>
+      <button class="nav-item admin-only" data-view="admin-users">Users</button>
+      <button class="nav-item admin-only" data-view="admin-audit">Audit Log</button>
+      <button class="nav-item admin-only" data-view="admin-alerts">Security Alerts</button>
+    </nav>
+
+    <div class="who">
+      <div class="who-name" id="who-name">&mdash;</div>
+      <div class="who-role" id="who-role">&mdash;</div>
+      <button class="btn btn-ghost btn-block" id="logout-btn">Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- CASES LIST -->
+    <section id="view-cases" class="view">
+      <div class="view-header">
+        <h2>Case Registry</h2>
+        <p class="view-sub">Cases you created or have been added to as an authorized member.</p>
+      </div>
+      <button class="btn btn-primary" id="new-case-btn" style="margin-bottom:18px">+ New Case</button>
+      <div id="case-list" class="doc-list"></div>
+    </section>
+
+    <!-- NEW CASE FORM -->
+    <section id="view-new-case" class="view" style="display:none">
+      <button class="btn btn-ghost" id="back-from-new-case">&larr; Back to cases</button>
+      <div class="view-header"><h2>Register New Case</h2></div>
+      <form id="new-case-form" class="case-form">
+        <label>Case number
+          <input type="text" id="nc-case-number" placeholder="e.g. FIR-2026-00417" required />
+        </label>
+        <label>Title
+          <input type="text" id="nc-title" required />
+        </label>
+        <label>Description
+          <textarea id="nc-desc" rows="3"></textarea>
+        </label>
+        <div class="form-error" id="new-case-error"></div>
+        <button type="submit" class="btn btn-primary">Create Case</button>
+      </form>
+    </section>
+
+    <!-- CASE DETAIL -->
+    <section id="view-case-detail" class="view" style="display:none">
+      <button class="btn btn-ghost" id="back-from-case">&larr; Back to cases</button>
+      <div id="case-detail-content"></div>
+    </section>
+
+    <!-- UPLOAD DOCUMENT (into a case) -->
+    <section id="view-upload" class="view" style="display:none">
+      <button class="btn btn-ghost" id="back-from-upload">&larr; Back to case</button>
+      <div class="view-header">
+        <h2>Register New Document</h2>
+        <p class="view-sub">Every uploaded file is hashed (SHA-256) and digitally signed with the registry's key upon intake.</p>
+      </div>
+      <form id="upload-form" class="case-form">
+        <input type="hidden" id="up-case-id" />
+        <label>Document type
+          <select id="up-type" required>
+            <option value="">Select type</option>
+            <option>FIR</option>
+            <option>Investigation Record</option>
+            <option>Witness Statement</option>
+            <option>Charge Sheet</option>
+            <option>Court Filing</option>
+            <option>Evidence Record</option>
+            <option>Forensic Report</option>
+            <option>Legal Notice</option>
+            <option>Judgment</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Title
+          <input type="text" id="up-title" required />
+        </label>
+        <label>Description
+          <textarea id="up-desc" rows="3"></textarea>
+        </label>
+        <label>Tags (comma separated)
+          <input type="text" id="up-tags" placeholder="e.g. theft, sector-12, active" />
+        </label>
+        <label>File
+          <input type="file" id="up-file" required />
+        </label>
+        <div class="form-error" id="upload-error"></div>
+        <button type="submit" class="btn btn-primary">Secure &amp; Register Document</button>
+      </form>
+    </section>
+
+    <!-- DOCUMENT DETAIL -->
+    <section id="view-detail" class="view" style="display:none">
+      <button class="btn btn-ghost" id="back-to-case">&larr; Back to case</button>
+      <div id="detail-content"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="view-search" class="view" style="display:none">
+      <div class="view-header">
+        <h2>Search</h2>
+        <p class="view-sub">Find cases and documents by ID, name, or file name.</p>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="search-q" placeholder="Keyword (case title, document title, tags...)" />
+        <button class="btn btn-primary" id="search-btn">Search</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="search-case-id" placeholder="Case number" />
+        <input type="text" id="search-case-name" placeholder="Case title" />
+        <input type="text" id="search-doc-id" placeholder="Document ID (e.g. DOC-000001)" />
+        <input type="text" id="search-filename" placeholder="File name" />
+      </div>
+      <h3 style="margin-top:26px">Matching Cases</h3>
+      <div id="search-case-results" class="doc-list"></div>
+      <h3 style="margin-top:26px">Matching Documents</h3>
+      <div id="search-doc-results" class="doc-list"></div>
+    </section>
+
+    <!-- ADMIN: USERS -->
+    <section id="view-admin-users" class="view" style="display:none">
+      <div class="view-header">
+        <h2>User Directory</h2>
+        <p class="view-sub">Create accounts and manage roles for staff.</p>
+      </div>
+      <form id="new-user-form" class="case-form inline-form">
+        <input type="text" id="nu-name" placeholder="Full name" required />
+        <input type="text" id="nu-username" placeholder="Username" required />
+        <input type="password" id="nu-password" placeholder="Password (8+ chars)" minlength="8" required />
+        <select id="nu-role" required></select>
+        <button type="submit" class="btn btn-primary">Add User</button>
+      </form>
+      <div class="form-error" id="user-error"></div>
+      <table class="ledger-table" id="user-table">
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- ADMIN: AUDIT LOG -->
+    <section id="view-admin-audit" class="view" style="display:none">
+      <div class="view-header">
+        <h2>System Audit Log</h2>
+        <p class="view-sub">Complete, hash-chained trail of every action taken in the registry.</p>
+      </div>
+      <button class="btn btn-primary" id="verify-chain-btn" style="margin-bottom:16px">Verify Audit Chain Integrity</button>
+      <div id="chain-status" style="margin-bottom:18px"></div>
+      <table class="ledger-table" id="audit-table">
+        <thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Case</th><th>Document</th><th>Details</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- ADMIN: SECURITY ALERTS -->
+    <section id="view-admin-alerts" class="view" style="display:none">
+      <div class="view-header">
+        <h2>Security Alerts</h2>
+        <p class="view-sub">Unauthorized access attempts and detected integrity failures, most recent first.</p>
+      </div>
+      <div id="alerts-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
